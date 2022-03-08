@@ -15,7 +15,7 @@ images:
 
 configMapGenerator:
 - literals:
-  - GITHUB_ORG=""
+  - GITHUB_ORG="ralphbean-appstudio"
   name: github-config
   behavior: replace
 
