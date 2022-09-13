@@ -12,5 +12,5 @@ spec:
   template:
     spec:
       source:
-        repoURL: https://github.com/ralphbean/infra-deployments
-        targetRevision: preview-main
+        repoURL: https://github.com/ralphbean/infra-deployments.git
+        targetRevision: preview-preview-main
