@@ -131,27 +131,6 @@ if [ -n "$DEPLOY_ONLY" ]; then
   done
 fi
 
-# set the API server which SPI uses to authenticate users to empty string (by default) so that multi-cluster
-# setup is not needed
-yq -i e ".0.value=\"$SPI_API_SERVER\"" $ROOT/components/spi/overlays/development/oauth-service-config-patch.json
-# patch the SPI configuration with the Vault host configuration to provided VAULT_HOST variable or to current cluster
-# and the base URL set to the SPI_BASE_URL variable or the URL of the  route to the SPI OAuth service in the current cluster
-# This script also sets up the Vault client to accept insecure TLS connections so that the custom vault host doesn't have
-# to serve requests using a trusted TLS certificate.
-$ROOT/hack/util-patch-spi-config.sh
-# configure the secrets and providers in SPI
-TMP_FILE=$(mktemp)
-yq e ".serviceProviders[0].type=\"GitHub\"" $ROOT/components/spi/base/config.yaml | \
-    yq e ".serviceProviders[0].clientId=\"${SPI_GITHUB_CLIENT_ID:-app-client-id}\"" - | \
-    yq e ".serviceProviders[0].clientSecret=\"${SPI_GITHUB_CLIENT_SECRET:-app-secret}\"" - | \
-    yq e ".serviceProviders[1].type=\"Quay\"" - | \
-    yq e ".serviceProviders[1].clientId=\"${SPI_QUAY_CLIENT_ID:-app-client-id}\"" - | \
-    yq e ".serviceProviders[1].clientSecret=\"${SPI_QUAY_CLIENT_SECRET:-app-secret}\"" - > $TMP_FILE
-oc create namespace spi-system --dry-run=client -o yaml | oc apply -f -
-oc create -n spi-system secret generic shared-configuration-file --from-file=config.yaml=$TMP_FILE --dry-run=client -o yaml | oc apply -f -
-echo "SPI configured"
-rm $TMP_FILE
-
 $ROOT/hack/util-set-github-org $MY_GITHUB_ORG
 
 domain=$(kubectl get ingresses.config.openshift.io cluster --template={{.spec.domain}})
